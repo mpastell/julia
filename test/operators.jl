@@ -71,3 +71,13 @@ let xs = [[i:i+4;] for i in 1:10]
         @test max.(xs[1:n]...) == [n:n+4;]
     end
 end
+
+# pr #17155
+@testset "function composition" begin
+    @test (uppercase∘hex)(239487) == "3A77F"
+end
+@testset "function negation" begin
+    str = randstring(20)
+    @test filter(!isupper, str) == replace(str, r"[A-Z]", "")
+    @test filter(!islower, str) == replace(str, r"[a-z]", "")
+end

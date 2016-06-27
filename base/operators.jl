@@ -665,6 +665,46 @@ julia> [1:5;] |> x->x.^2 |> sum |> inv
 """
 |>(x, f) = f(x)
 
+# function composition
+
+"""
+    f ∘ g
+
+Compose functions: i.e. `(f ∘ g)(args...)` means `f(g(args...))`.
+
+```jldoctest
+julia> map(uppercase∘hex, 250:255)
+6-element Array{String,1}:
+ "FA"
+ "FB"
+ "FC"
+ "FD"
+ "FE"
+ "FF"
+```
+"""
+∘(f, g) = (x...)->f(g(x...))
+
+
+"""
+    !f::Function
+
+Predicate function negation: when the argument of `!` is a function, it returns a
+function which computes the boolean negation of `f`.
+
+```jldoctest
+julia> str = "∀ ε > 0, ∃ δ > 0: |x-y| < δ ⇒ |f(x)-f(y)| < ε"
+"∀ ε > 0, ∃ δ > 0: |x-y| < δ ⇒ |f(x)-f(y)| < ε"
+
+julia> filter(isalpha, str)
+"εδxyδfxfyε"
+
+julia> filter(!isalpha, str)
+"∀  > 0, ∃  > 0: |-| <  ⇒ |()-()| < "
+```
+"""
+!(f::Function) = (x...)->!f(x...)
+
 # array shape rules
 
 promote_shape(::Tuple{}, ::Tuple{}) = ()
@@ -989,6 +1029,7 @@ export
     √,
     ∛,
     ⊻,
+    ∘,
     colon,
     hcat,
     vcat,
@@ -1002,6 +1043,6 @@ import ..this_module: !, !=, xor, %, ÷, &, *, +, -,
     /, //, <, <:, <<, <=, ==, >, >=, >>, >>>,
     <|, |>, \, ^, |, ~, !==, ===, >:, colon, hcat, vcat, hvcat, getindex, setindex!,
     transpose, ctranspose,
-    ≥, ≤, ≠, ⋅, ×, ∈, ∉, ∋, ∌, ⊆, ⊈, ⊊, ∩, ∪, √, ∛, ⊻
+    ≥, ≤, ≠, ⋅, ×, ∈, ∉, ∋, ∌, ⊆, ⊈, ⊊, ∩, ∪, √, ∛, ⊻, ∘
 
 end
