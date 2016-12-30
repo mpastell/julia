@@ -1347,4 +1347,8 @@ function quadgk(args...)
 end
 export quadgk
 
+# #19660
+@deprecate finalize(sa::LibGit2.StrArrayStruct) close(sa)
+@deprecate finalize(sa::LibGit2.Buffer) close(sa)
+
 # End deprecations scheduled for 0.6
