@@ -12,12 +12,12 @@ immutable SubArray{T,N,P,I,L} <: AbstractArray{T,N}
     stride1::Int       # used only for linear indexing
     function SubArray(parent, indexes, offset1, stride1)
         check_parent_index_match(parent, indexes)
-        new(parent, ensure_indexable(indexes), offset1, stride1)
+        new(parent, indexes, offset1, stride1)
     end
 end
 # Compute the linear indexability of the indices, and combine it with the linear indexing of the parent
 function SubArray(parent::AbstractArray, indexes::Tuple, dims::Tuple)
-    SubArray(linearindexing(viewindexing(indexes), linearindexing(parent)), parent, indexes, dims)
+    SubArray(linearindexing(viewindexing(indexes), linearindexing(parent)), parent, ensure_indexable(indexes), dims)
 end
 function SubArray{P, I, N}(::LinearSlow, parent::P, indexes::I, dims::NTuple{N})
     SubArray{eltype(P), N, P, I, false}(parent, indexes, 0, 0)
