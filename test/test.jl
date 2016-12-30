@@ -398,6 +398,7 @@ end
 
 let
     io = IOBuffer()
-    Base.showerror(io, Test.TestSetException(1,2,3,4,Vector{Union{Base.Test.Error, Base.Test.Fail}}()), backtrace())
+    exc = Test.TestSetException(1,2,3,4,Vector{Union{Base.Test.Error, Base.Test.Fail}}())
+    Base.showerror(io, exc, backtrace())
     @test !contains(String(take!(io)), "backtrace()")
 end
