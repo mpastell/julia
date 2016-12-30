@@ -2,6 +2,8 @@
 
 ## shell-like command parsing ##
 
+const shell_special = "#{}()[]<>|&*?~;"
+
 function shell_parse(str::AbstractString, interpolate::Bool=true)
     s = lstrip(str)
     # strips the end but respects the space when the string ends with "\\ "
@@ -92,6 +94,8 @@ function shell_parse(str::AbstractString, interpolate::Bool=true)
                     update_arg(s[i:j-1]); i = k
                     c, k = next(s,k)
                 end
+            elseif !in_single_quotes && !in_double_quotes && c in shell_special
+                depwarn("special characters \"$shell_special\" should now be quoted in commands", :shell_parse)
             end
             j = k
         end
@@ -129,7 +133,7 @@ function print_shell_word(io::IO, word::AbstractString)
     has_single = false
     has_special = false
     for c in word
-        if isspace(c) || c=='\\' || c=='\'' || c=='"' || c=='$'
+        if isspace(c) || c=='\\' || c=='\'' || c=='"' || c=='$' || c in shell_special
             has_special = true
             if c == '\''
                 has_single = true
