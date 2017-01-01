@@ -1168,4 +1168,6 @@ for (dep, f, op) in [(:sumabs!, :sum!, :abs),
     end
 end
 
+@deprecate_binding FloatRange StepRangeHiLo
+
 # End deprecations scheduled for 0.6

@@ -14,6 +14,17 @@ function test_linspace{T<:AbstractFloat}(r::LinSpace{T})
     nothing
 end
 
+function test_hilo{T<:AbstractFloat}(r::StepRangeHiLo{T}, a, b)
+    isempty(r) && return nothing
+    n = length(r)
+    d = max(n-1,1)
+    for i = 1:n
+        c = b*(i-1)//d + a*(d-i+1)//d
+        @test r[i] == T(c)
+    end
+    nothing
+end
+
 # ranges
 @test size(10:1:0) == (0,)
 @test length(1:.2:2) == 6
@@ -259,7 +270,7 @@ else
     @test sum(Int64(1):10^9-1) == div(10^9 * (Int64(10^9)-1), 2)
 end
 
-# Tricky sums of FloatRange #8272
+# Tricky sums of StepRangeHiLo #8272
 @test sum(10000.:-0.0001:0) == 5.00000005e11
 @test sum(0:0.001:1) == 500.5
 @test sum(0:0.000001:1) == 500000.5
@@ -303,24 +314,23 @@ end
 @test [0.0:1.0:0.0;]   == [0.0]
 @test [0.0:-1.0:0.0;]  == [0.0]
 
-test_linspace(linspace(0.1,0.3,3))
-test_linspace(linspace(0.0,0.3,4))
-test_linspace(linspace(0.3,-0.1,5))
-test_linspace(linspace(0.1,-0.3,5))
-test_linspace(linspace(0.0,1.0,11))
-test_linspace(linspace(0.0,1.0,0))
-test_linspace(linspace(0.0,-1.0,0))
-test_linspace(linspace(0.0,-1.0,11))
-test_linspace(linspace(1.0,27.0,1275))
-test_linspace(linspace(0.0,2.1,4))
-test_linspace(linspace(0.0,3.3,4))
-test_linspace(linspace(0.1,3.4,4))
-test_linspace(linspace(0.0,3.9,4))
-test_linspace(linspace(0.1,4.0,4))
-test_linspace(linspace(1.1,3.3,3))
-test_linspace(linspace(0.3,1.1,9))
-test_linspace(linspace(0.0,0.0,1))
-test_linspace(linspace(0.0,0.0,1))
+test_hilo(linspace(0.1,0.3,3), 1//10, 3//10)
+test_hilo(linspace(0.0,0.3,4), 0, 3//10)
+test_hilo(linspace(0.3,-0.1,5), 3//10, -1//10)
+test_hilo(linspace(0.1,-0.3,5), 1//10, -3//10)
+test_hilo(linspace(0.0,1.0,11), 0, 1)
+test_hilo(linspace(0.0,1.0,0), 0, 1)
+test_hilo(linspace(0.0,-1.0,0), 0, -1)
+test_hilo(linspace(0.0,-1.0,11), 0, -1)
+test_hilo(linspace(1.0,27.0,1275), 1, 27)
+test_hilo(linspace(0.0,2.1,4), 0, 21//10)
+test_hilo(linspace(0.0,3.3,4), 0, 33//10)
+test_hilo(linspace(0.1,3.4,4), 1//10, 34//10)
+test_hilo(linspace(0.0,3.9,4), 0, 39//10)
+test_hilo(linspace(0.1,4.0,4), 1//10, 4)
+test_hilo(linspace(1.1,3.3,3), 11//10, 33//10)
+test_hilo(linspace(0.3,1.1,9), 3//10, 11//10)
+test_hilo(linspace(0.0,0.0,1), 0, 0)
 
 @test [0.0:1.0:5.5;]   == [0:10:55;]./10
 @test [0.0:-1.0:0.5;]  == []
@@ -348,7 +358,7 @@ for T = (Float32, Float64,),# BigFloat),
     vals  = T[a:s:a+(n-1)*s;]./den
     r = start:step:stop
     @test [r;] == vals
-    test_linspace(linspace(start, stop, length(r)))
+    test_hilo(linspace(start, stop, length(r)), a//d, (a+(n-1)*s)//d)
     # issue #7420
     n = length(r)
     @test [r[1:n];] == [r;]
@@ -379,8 +389,9 @@ for T = (Float32, Float64)
     @test [linspace(u,u,1);] == [u]
     @test [linspace(u,-u,2);] == [u,-u]
     @test [linspace(u,-u,3);] == [u,0,-u]
-    v = [linspace(-u,u,12);]
-    @test length(v) == 12
+    # v = [linspace(-u,u,12);]
+    # @test length(v) == 12
+    @test_throws ArgumentError linspace(-u,u,12)
     @test_skip [-3u:u:3u;]  == [linspace(-3u,3u,7);] == [-3:3;].*u
     @test_skip [3u:-u:-3u;] == [linspace(3u,-3u,7);] == [3:-1:-3;].*u
 end
@@ -482,7 +493,7 @@ let r1 = 1.0:0.1:2.0, r2 = 1.0f0:0.2f0:3.0f0, r3 = 1:2:21
     @test r1 + r1 == 2*r1
     @test r1 + r2 == 2.0:0.3:5.0
     @test (r1 + r2) - r2 == r1
-    @test r1 + r3 == convert(FloatRange{Float64}, r3) + r1
+    @test r1 + r3 == convert(StepRangeHiLo{Float64}, r3) + r1
     @test r3 + r3 == 2 * r3
 end
 
@@ -580,14 +591,14 @@ end
 @test_throws ArgumentError StepRange(1.1,1,5.1)
 
 @test promote(0f0:inv(3f0):1f0, 0.:2.:5.) === (0:1/3:1, 0.:2.:5.)
-@test convert(FloatRange{Float64}, 0:1/3:1) === 0:1/3:1
-@test convert(FloatRange{Float64}, 0f0:inv(3f0):1f0) === 0:1/3:1
+@test convert(StepRangeHiLo{Float64}, 0:1/3:1) === 0:1/3:1
+@test convert(StepRangeHiLo{Float64}, 0f0:inv(3f0):1f0) === 0:1/3:1
 
 @test promote(0:1/3:1, 0:5) === (0:1/3:1, 0.:1.:5.)
-@test convert(FloatRange{Float64}, 0:5) === 0.:1.:5.
-@test convert(FloatRange{Float64}, 0:1:5) === 0.:1.:5.
-@test convert(FloatRange, 0:5) === 0.:1.:5.
-@test convert(FloatRange, 0:1:5) === 0.:1.:5.
+@test convert(StepRangeHiLo{Float64}, 0:5) === 0.:1.:5.
+@test convert(StepRangeHiLo{Float64}, 0:1:5) === 0.:1.:5.
+@test convert(StepRangeHiLo, 0:5) === 0.:1.:5.
+@test convert(StepRangeHiLo, 0:1:5) === 0.:1.:5.
 
 # Issue #11245
 let io = IOBuffer()

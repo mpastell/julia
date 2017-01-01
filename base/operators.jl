@@ -842,13 +842,13 @@ for f in (:+, :-)
             range($f(first(r1),first(r2)), $f(step(r1),step(r2)), r1l)
         end
 
-        function $f{T<:AbstractFloat}(r1::FloatRange{T}, r2::FloatRange{T})
+        function $f{T<:AbstractFloat}(r1::StepRangeHiLo{T}, r2::StepRangeHiLo{T})
             len = r1.len
             (len == r2.len ||
              throw(DimensionMismatch("argument dimensions must match")))
             divisor1, divisor2 = r1.divisor, r2.divisor
             if divisor1 == divisor2
-                FloatRange{T}($f(r1.start,r2.start), $f(r1.step,r2.step),
+                StepRangeHiLo{T}($f(r1.start,r2.start), $f(r1.step,r2.step),
                               len, divisor1)
             else
                 d1 = Int(divisor1)
@@ -856,7 +856,7 @@ for f in (:+, :-)
                 d = lcm(d1,d2)
                 s1 = div(d,d1)
                 s2 = div(d,d2)
-                FloatRange{T}($f(r1.start*s1, r2.start*s2),
+                StepRangeHiLo{T}($f(r1.start*s1, r2.start*s2),
                               $f(r1.step*s1, r2.step*s2),  len, d)
             end
         end
@@ -869,8 +869,8 @@ for f in (:+, :-)
                      convert(T, $f(last(r1), last(r2))), len)
         end
 
-        $f(r1::Union{FloatRange, OrdinalRange, LinSpace},
-           r2::Union{FloatRange, OrdinalRange, LinSpace}) =
+        $f(r1::Union{StepRangeHiLo, OrdinalRange, LinSpace},
+           r2::Union{StepRangeHiLo, OrdinalRange, LinSpace}) =
                $f(promote(r1, r2)...)
     end
 end
